@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -18,33 +18,50 @@ export function TraceAiApp() {
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState("")
+  const fileInputRef = useRef(null)
 
-  const handleUpload = () => {
+  const handleUpload = (file) => {
     setIsUploading(true)
-    // Simulating document upload and processing
-    setTimeout(() => {
-      setIsUploading(false)
-      const newProgress = [
-        { text: "Document received", completed: true },
-        { text: "Starting analysis...", completed: true },
-        { text: "Checking procurement details", completed: true },
-        { text: "Verifying compliance", completed: true },
-        { text: "Generating audit report", completed: true }
-      ]
-      setProgress(newProgress)
-      
-      // Add a new document to the list
-      const newDocument = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: `Document_${documents.length + 1}.pdf`,
-        uploadDate: new Date().toLocaleString(),
-        status: "Completed",
-        vendor: ["Acme Corp", "TechSupply Inc.", "Global Goods Ltd."][Math.floor(Math.random() * 3)],
-        amount: Math.floor(Math.random() * 100000000) + 1000000,
-        riskLevel: ["Low", "Medium", "High"][Math.floor(Math.random() * 3)]
+    setProgress([])
+
+    const progressSteps = [
+      { text: "Document received", completed: false },
+      { text: "Starting analysis...", completed: false },
+      { text: "Checking procurement details", completed: false },
+      { text: "Verifying compliance", completed: false },
+      { text: "Generating audit report", completed: false }
+    ]
+    
+    setProgress(progressSteps)
+
+    const updateProgress = (index) => {
+      if (index >= progressSteps.length) {
+        setIsUploading(false)
+        // Add new document using the actual file details
+        const newDocument = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name || `Document_${documents.length + 1}.pdf`,
+          uploadDate: new Date().toLocaleString(),
+          status: "Completed",
+          vendor: ["Acme Corp", "TechSupply Inc.", "Global Goods Ltd."][Math.floor(Math.random() * 3)],
+          amount: Math.floor(Math.random() * 100000000) + 1000000,
+          riskLevel: ["Low", "Medium", "High"][Math.floor(Math.random() * 3)],
+          file: file
+        }
+        setDocuments(prev => [...prev, newDocument])
+        return
       }
-      setDocuments(prev => [...prev, newDocument])
-    }, 2000)
+
+      setProgress(current => 
+        current.map((item, i) => 
+          i === index ? { ...item, completed: true } : item
+        )
+      )
+
+      setTimeout(() => updateProgress(index + 1), 2000)
+    }
+
+    setTimeout(() => updateProgress(0), 2000)
   }
 
   const handleViewDetails = (document) => {
@@ -79,113 +96,128 @@ export function TraceAiApp() {
     }
   }
 
-  const renderMainView = () => (
-    <main className="flex-1 overflow-y-auto p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="bg-white shadow sm:rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg leading-6 font-medium text-gray-900">Upload Procurement Document</h3>
-              <div className="flex items-center space-x-2">
-                <label htmlFor="workflow-select" className="text-sm font-medium text-gray-700">
-                  Workflow:
-                </label>
-                <Select
-                  value={selectedWorkflow}
-                  onValueChange={(value) => setSelectedWorkflow(value)}>
-                  <SelectTrigger id="workflow-select" className="w-[220px]">
-                    <SelectValue placeholder="Select workflow" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Penunjukan langsung">Penunjukan langsung</SelectItem>
-                    <SelectItem value="Pemilihan langsung">Pemilihan langsung</SelectItem>
-                    <SelectItem value="Pengadaan dikecualikan">Pengadaan dikecualikan</SelectItem>
-                    <SelectItem value="Tender terbuka">Tender terbuka</SelectItem>
-                    <SelectItem value="Tender tertutup">Tender tertutup</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="mt-2 max-w-xl text-sm text-gray-500">
-              <p>Upload your procurement document for auditing. Supported formats: PDF, DOCX, XLS.</p>
-            </div>
-            <div className="mt-5">
-              <Button onClick={handleUpload} disabled={isUploading}>
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Document
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-        </div>
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (file && file.type === 'application/pdf') {
+      // Create a copy of the file to ensure it's properly stored
+      const fileBlob = new Blob([file], { type: 'application/pdf' })
+      handleUpload(fileBlob)
+    } else {
+      alert('Please select a PDF file')
+    }
+    // Reset file input
+    event.target.value = ''
+  }
 
-        {/* Documents Table */}
-        <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Document Name</TableHead>
-                <TableHead>Upload Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Risk Level</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((doc) => (
-                <TableRow key={doc.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      <FileText className="mr-2 h-4 w-4 text-gray-400" />
-                      {doc.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{doc.uploadDate}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {doc.status === "Completed" ? (
-                        <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                      ) : doc.status === "In Progress" ? (
-                        <Loader2 className="mr-2 h-4 w-4 text-blue-500 animate-spin" />
-                      ) : (
-                        <div className="mr-2 h-4 w-4 rounded-full bg-yellow-500" />
-                      )}
-                      {doc.status}
-                    </div>
-                  </TableCell>
-                  <TableCell>{doc.vendor}</TableCell>
-                  <TableCell>Rp. {doc.amount.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <div
-                        className={`w-3 h-3 rounded-full mr-2 ${
-                          doc.riskLevel === "Low" ? "bg-blue-500" :
-                          doc.riskLevel === "Medium" ? "bg-yellow-500" : "bg-red-500"
-                        }`} />
-                      {doc.riskLevel}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="secondary" size="sm" onClick={() => handleViewDetails(doc)}>
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Analyze
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+  const renderMainView = () => (
+    <main className="flex-1 overflow-hidden p-6">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileSelect}
+        accept=".pdf"
+        className="hidden"
+      />
+
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Documents</h2>
+        <div className="flex items-center space-x-4">
+          <label htmlFor="workflow-select" className="text-sm font-medium text-gray-700">
+            Workflow:
+          </label>
+          <Select
+            value={selectedWorkflow}
+            onValueChange={(value) => setSelectedWorkflow(value)}>
+            <SelectTrigger id="workflow-select" className="w-[220px]">
+              <SelectValue placeholder="Select workflow" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Penunjukan langsung">Penunjukan langsung</SelectItem>
+              <SelectItem value="Pemilihan langsung">Pemilihan langsung</SelectItem>
+              <SelectItem value="Pengadaan dikecualikan">Pengadaan dikecualikan</SelectItem>
+              <SelectItem value="Tender terbuka">Tender terbuka</SelectItem>
+              <SelectItem value="Tender tertutup">Tender tertutup</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            onClick={() => fileInputRef.current.click()}
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Document
+              </>
+            )}
+          </Button>
         </div>
+      </div>
+
+      {/* Documents Table */}
+      <div className="bg-white shadow sm:rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Document Name</TableHead>
+              <TableHead>Upload Date</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Vendor</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Risk Level</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.map((doc) => (
+              <TableRow key={doc.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center">
+                    <FileText className="mr-2 h-4 w-4 text-gray-400" />
+                    {doc.name}
+                  </div>
+                </TableCell>
+                <TableCell>{doc.uploadDate}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    {doc.status === "Completed" ? (
+                      <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
+                    ) : doc.status === "In Progress" ? (
+                      <Loader2 className="mr-2 h-4 w-4 text-blue-500 animate-spin" />
+                    ) : (
+                      <div className="mr-2 h-4 w-4 rounded-full bg-yellow-500" />
+                    )}
+                    {doc.status}
+                  </div>
+                </TableCell>
+                <TableCell>{doc.vendor}</TableCell>
+                <TableCell>Rp. {doc.amount.toLocaleString()}</TableCell>
+                <TableCell>
+                  <div className="flex items-center">
+                    <div
+                      className={`w-3 h-3 rounded-full mr-2 ${
+                        doc.riskLevel === "Low" ? "bg-blue-500" :
+                        doc.riskLevel === "Medium" ? "bg-yellow-500" : "bg-red-500"
+                      }`} />
+                    {doc.riskLevel}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Button variant="secondary" size="sm" onClick={() => handleViewDetails(doc)}>
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Analyze
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </main>
   )

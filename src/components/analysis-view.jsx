@@ -4,6 +4,20 @@ import { Button } from "@/components/ui/button"
 import { Send, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
 import { Document, Page, pdfjs } from 'react-pdf'
 import { useState, useEffect } from 'react'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
@@ -13,6 +27,12 @@ export function AnalysisView({ selectedDocument, messages, inputMessage, setInpu
   const [pageNumber, setPageNumber] = useState(1)
   const [scale, setScale] = useState(1.0)
   const [pdfUrl, setPdfUrl] = useState(null)
+  const [procurementItems, setProcurementItems] = useState([
+    { id: "1", name: "Office Chairs", quantity: 50, unitPrice: 100000, totalPrice: 5000000, marketPrice: 98000, similarItemLink: "#" },
+    { id: "2", name: "Desks", quantity: 25, unitPrice: 500000, totalPrice: 12500000, marketPrice: 450000, similarItemLink: "#" },
+    { id: "3", name: "Laptops", quantity: 10, unitPrice: 10000000, totalPrice: 100000000, marketPrice: 8500000, similarItemLink: "#" },
+    { id: "4", name: "Printers", quantity: 5, unitPrice: 2000000, totalPrice: 10000000, marketPrice: 1950000, similarItemLink: "#" },
+  ])
 
   // Create URL for the PDF file when component mounts or document changes
   useEffect(() => {
@@ -49,14 +69,21 @@ export function AnalysisView({ selectedDocument, messages, inputMessage, setInpu
     setScale(prev => Math.max(prev - 0.2, 0.5))
   }
 
+  function getDeviationLevel(unitPrice, marketPrice) {
+    const deviation = (unitPrice - marketPrice) / marketPrice * 100
+    if (deviation <= 2) return { level: "Low", percentage: deviation }
+    if (deviation <= 10) return { level: "Medium", percentage: deviation }
+    return { level: "High", percentage: deviation }
+  }
+
   return (
-    <main className="flex-1 overflow-hidden p-6">
+    <main className="flex-1 overflow-hidden p-6 flex flex-col">
       <div className="mb-4">
         <Button variant="ghost" onClick={onBack}>← Back to Home</Button>
       </div>
-      <div className="h-full flex space-x-4">
+      <div className="flex-1 flex space-x-4 min-h-0">
         {/* PDF Viewer */}
-        <div className="w-1/2 bg-white shadow rounded-lg p-4">
+        <div className="w-1/2 bg-white shadow rounded-lg p-4 flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900">
               {selectedDocument?.name}
@@ -71,7 +98,7 @@ export function AnalysisView({ selectedDocument, messages, inputMessage, setInpu
             </div>
           </div>
           
-          <div className="h-[calc(100%-6rem)] overflow-auto">
+          <div className="flex-1 overflow-auto min-h-0">
             {pdfUrl ? (
               <Document
                 file={pdfUrl}
@@ -119,7 +146,7 @@ export function AnalysisView({ selectedDocument, messages, inputMessage, setInpu
         {/* AI Chat Interface */}
         <div className="w-1/2 bg-white shadow rounded-lg p-4 flex flex-col">
           <h3 className="text-lg font-medium text-gray-900 mb-4">AI Chat</h3>
-          <ScrollArea className="flex-grow mb-4">
+          <ScrollArea className="flex-1 min-h-0">
             {messages.map((message, index) => (
               <div
                 key={index}

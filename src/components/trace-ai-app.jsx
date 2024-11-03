@@ -83,7 +83,13 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
         if (index === progress.length - 1) {
           setIsUploading(false);
           
-          // Add a new document to the list
+          const deviation = (Math.random() * 30).toFixed(1);
+          const getRiskLevel = (dev) => {
+            if (dev > 25) return "High";
+            if (dev >= 15) return "Medium";
+            return "Low";
+          };
+
           const newDocument = {
             id: Math.random().toString(36).substr(2, 9),
             name: `Document_${documents.length + 1}.pdf`,
@@ -91,8 +97,8 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
             status: "Completed",
             vendor: ["Acme Corp", "TechSupply Inc.", "Global Goods Ltd."][Math.floor(Math.random() * 3)],
             amount: Math.floor(Math.random() * 100000000) + 1000000,
-            riskLevel: ["Low", "Medium", "High"][Math.floor(Math.random() * 3)],
-            deviation: (Math.random() * 30).toFixed(1) // Add random deviation percentage
+            deviation: deviation,
+            riskLevel: getRiskLevel(parseFloat(deviation))
           };
           setDocuments(prev => [...prev, newDocument]);
         }
@@ -216,17 +222,18 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
                     <div className="flex items-center">
                       <div
                         className={`w-3 h-3 rounded-full mr-2 ${
-                          doc.riskLevel === "Low" ? "bg-blue-500" :
-                          doc.riskLevel === "Medium" ? "bg-yellow-500" : "bg-red-500"
+                          doc.deviation > 25 ? "bg-red-500" :
+                          doc.deviation >= 15 ? "bg-yellow-500" : "bg-blue-500"
                         }`} />
-                      {doc.riskLevel}
+                      {doc.deviation > 25 ? "High" :
+                       doc.deviation >= 15 ? "Medium" : "Low"}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className={`px-2 py-1 rounded-full text-xs font-medium inline-flex ${
-                      doc.deviation <= 5 ? "bg-blue-100 text-blue-800" :
-                      doc.deviation <= 20 ? "bg-yellow-100 text-yellow-800" :
-                      "bg-red-100 text-red-800"
+                      doc.deviation > 25 ? "bg-red-100 text-red-800" :
+                      doc.deviation >= 15 ? "bg-yellow-100 text-yellow-800" :
+                      "bg-blue-100 text-blue-800"
                     }`}>
                       {doc.deviation}%
                     </div>

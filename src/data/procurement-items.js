@@ -1,7 +1,7 @@
 export const procurementItemsData = [
   { id: "1", name: "Pulpen Gel", quantity: 2000, unitPrice: 6000, totalPrice: 12000000, marketPrice: 5000, similarItemLink: "#" },
   { id: "2", name: "Pensil Mekanik", quantity: 1000, unitPrice: 6000, totalPrice: 6000000, marketPrice: 6000, similarItemLink: "#" },
-  { id: "3", name: "Kertas HVS A4 (80gsm)", quantity: 400, unitPrice: 41000, totalPrice: 16400000, marketPrice: 40000, similarItemLink: "#" },
+  { id: "3", name: "Kertas HVS A4 (80gsm)", quantity: 400, unitPrice: 41000, totalPrice: 16400000, marketPrice: 40000, similarItemLink: "https://padiumkm.id/product/kertas-hvs-a4-70-gr--spesial-desain-bmandiri-/631cdd55e80949c888a924c2" },
   { id: "4", name: "Kertas HVS A3 (70gsm)", quantity: 150, unitPrice: 70000, totalPrice: 10500000, marketPrice: 50000, similarItemLink: "#" },
   { id: "5", name: "Penggaris Logam 30 cm", quantity: 200, unitPrice: 4250, totalPrice: 850000, marketPrice: 4000, similarItemLink: "#" },
   { id: "6", name: "Amplop Coklat A4", quantity: 150, unitPrice: 30000, totalPrice: 4500000, marketPrice: 30000, similarItemLink: "#" },

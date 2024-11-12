@@ -15,9 +15,9 @@ import { Upload, BarChart2, Workflow, ListTodo, Search, ExternalLink, UserCircle
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { procurementItemsData } from "@/data/procurement-items";
 import { itemDescriptions } from "@/data/item-descriptions";
 import * as pdfjsLib from 'pdfjs-dist';
+import { processAnalysisData } from '@/utils/processAnalysisData';
 // Set worker path directly
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.mjs',
@@ -62,12 +62,6 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   const [selectedItem, setSelectedItem] = useState(null)
   const [showPdfViewer, setShowPdfViewer] = useState(false)
 
-  useEffect(() => {
-    if (selectedDocument) {
-      setProcurementItems(procurementItemsData);
-    }
-  }, [selectedDocument]);
-
   const extractTextFromPdf = async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -89,6 +83,29 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
     }
   };
 
+  const analyzeDocument = async (text) => {
+    try {
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('API Analysis Result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error analyzing document:', error);
+      return null;
+    }
+  };
+
   const handleUpload = async (event) => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -101,14 +118,23 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
       setIsUploading(true);
       setProgress(prev => prev.map(step => ({ ...step, completed: false })));
 
-      // Extract text from PDF
+      // Extract text and analyze
       const extractedText = await extractTextFromPdf(file);
-      if (!extractedText) {
-        setIsUploading(false);
-        return;
+      if (extractedText) {
+        console.log('Extracted PDF text:', extractedText);
+        const analysisResult = await analyzeDocument(extractedText);
+        
+        if (analysisResult) {
+          // Process the API response using the utility function
+          const { documentData, itemsData } = processAnalysisData(analysisResult, documents.length);
+          
+          // Update state with processed data, overriding the document name
+          setDocuments(prev => [...prev, { ...documentData, name: file.name }]);
+          setProcurementItems(itemsData);
+        }
       }
 
-      // Continue with your existing upload simulation logic
+      // Continue with progress simulation
       const stepDelay = 1000;
       progress.forEach((step, index) => {
         setTimeout(() => {
@@ -119,28 +145,8 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
             }))
           );
 
-          // After last step is complete, add new document and reset upload state
           if (index === progress.length - 1) {
             setIsUploading(false);
-            
-            const deviation = (Math.random() * 30).toFixed(1);
-            const getRiskLevel = (dev) => {
-              if (dev > 25) return "High";
-              if (dev >= 15) return "Medium";
-              return "Low";
-            };
-
-            const newDocument = {
-              id: Math.random().toString(36).substr(2, 9),
-              name: `Document_${documents.length + 1}.pdf`,
-              uploadDate: new Date().toLocaleString(),
-              status: "Completed",
-              vendor: ["Acme Corp", "TechSupply Inc.", "Global Goods Ltd."][Math.floor(Math.random() * 3)],
-              amount: Math.floor(Math.random() * 100000000) + 1000000,
-              deviation: deviation,
-              riskLevel: getRiskLevel(parseFloat(deviation))
-            };
-            setDocuments(prev => [...prev, newDocument]);
           }
         }, stepDelay * (index + 1));
       });
@@ -190,12 +196,13 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
     }
   }
 
-  const getDeviationLevel = (unitPrice, marketPrice) => {
-    const deviation = (unitPrice - marketPrice) / marketPrice * 100
-    if (deviation <= 2) return { level: "Low", percentage: deviation }
-    if (deviation <= 10) return { level: "Medium", percentage: deviation }
-    return { level: "High", percentage: deviation }
-  }
+  const getDeviationLevel = (deviation) => {
+    return {
+      level: deviation > 25 ? "High" : 
+             deviation >= 15 ? "Medium" : "Low",
+      percentage: deviation
+    };
+  };
 
   const renderMainView = () => (
     <main className="flex-1 overflow-y-auto p-6">
@@ -368,9 +375,9 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
                   </TableHeader>
                   <TableBody>
                     {procurementItems.map((item) => {
-                      const { level, percentage } = getDeviationLevel(item.unitPrice, item.marketPrice)
+                      const { level, percentage } = getDeviationLevel(item.deviation)
                       return (
-                        (<TableRow
+                        <TableRow
                           key={item.id}
                           className="cursor-pointer hover:bg-gray-100"
                           onClick={() => setSelectedItem(item)}>
@@ -389,7 +396,7 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
                                       level === "Medium" ? "bg-yellow-100 text-yellow-800" :
                                       "bg-red-100 text-red-800"
                                     }`}>
-                                    {percentage.toFixed(2)}%
+                                    {Math.round(percentage)}%
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -399,7 +406,7 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
                               </Tooltip>
                             </TooltipProvider>
                           </TableCell>
-                        </TableRow>)
+                        </TableRow>
                       );
                     })}
                   </TableBody>
@@ -551,7 +558,7 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
               <div>
                 <p className="text-sm font-medium text-gray-700">Deviation:</p>
                 <p className="text-lg font-semibold">
-                  {getDeviationLevel(selectedItem.unitPrice, selectedItem.marketPrice).percentage.toFixed(2)}%
+                  {Math.round(selectedItem.deviation)}%
                 </p>
               </div>
 

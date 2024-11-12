@@ -18,11 +18,9 @@ import { Label } from "@/components/ui/label"
 import { itemDescriptions } from "@/data/item-descriptions";
 import * as pdfjsLib from 'pdfjs-dist';
 import { processAnalysisData } from '@/utils/processAnalysisData';
-// Set worker path directly
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+import { Document, Page, pdfjs } from 'react-pdf';
+// Set worker path
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)
@@ -61,6 +59,9 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   const [procurementItems, setProcurementItems] = useState([])
   const [selectedItem, setSelectedItem] = useState(null)
   const [showPdfViewer, setShowPdfViewer] = useState(false)
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pdfFile, setPdfFile] = useState(null);
 
   const extractTextFromPdf = async (file) => {
     try {
@@ -150,6 +151,9 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
           }
         }, stepDelay * (index + 1));
       });
+
+      // Store the PDF file in state
+      setPdfFile(file);
     };
 
     fileInput.click();
@@ -203,6 +207,11 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
       percentage: deviation
     };
   };
+
+  function onDocumentLoadSuccess({ numPages }) {
+    setNumPages(numPages);
+    setPageNumber(1);
+  }
 
   const renderMainView = () => (
     <main className="flex-1 overflow-y-auto p-6">
@@ -358,8 +367,43 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
             </CardHeader>
             <CardContent className="flex-1 overflow-auto">
               {showPdfViewer ? (
-                <div className="h-full bg-gray-100 rounded flex items-center justify-center">
-                  <p className="text-gray-500">PDF Viewer placeholder for {selectedDocument?.name}</p>
+                <div className="h-full flex flex-col">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        onClick={() => setPageNumber(prev => Math.max(1, prev - 1))}
+                        disabled={pageNumber <= 1}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-sm">
+                        Page {pageNumber} of {numPages}
+                      </span>
+                      <Button
+                        onClick={() => setPageNumber(prev => Math.min(numPages, prev + 1))}
+                        disabled={pageNumber >= numPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-auto flex justify-center bg-gray-100">
+                    {pdfFile && (
+                      <Document
+                        file={pdfFile}
+                        onLoadSuccess={onDocumentLoadSuccess}
+                        className="max-w-full"
+                      >
+                        <Page
+                          pageNumber={pageNumber}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          className="shadow-lg"
+                          scale={1.2}
+                        />
+                      </Document>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <Table>

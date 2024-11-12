@@ -4,7 +4,7 @@ import { TraceAiDashboard } from "@/components/trace-ai-dashboard";
 
 export default function Home() {
   return (
-    // <TraceAiApp />
-    <TraceAiDashboard />
+    <TraceAiApp />
+    // <TraceAiDashboard />
   );
 }

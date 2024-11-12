@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Upload, BarChart2, Workflow, ListTodo, Search, ExternalLink, UserCircle, ClipboardList, Send, Loader2, CheckCircle2, FileText, ArrowLeft } from "lucide-react"
+import { Upload, BarChart2, Workflow, ListTodo, Search, ExternalLink, UserCircle, ClipboardList, Send, Loader2, CheckCircle2, FileText, ArrowLeft, MessageSquare } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -115,11 +115,34 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
     if (inputMessage.trim()) {
       setMessages(prev => [...prev, { role: "user", content: inputMessage }])
       setInputMessage("")
-      // Simulate AI response
+      // Scroll to bottom after user message
       setTimeout(() => {
-        setMessages(
-          prev => [...prev, { role: "assistant", content: "This is a simulated AI response to your query about the document." }]
-        )
+        const chatContainer = document.querySelector('.ai-chat-messages');
+        if (chatContainer) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      }, 100)
+      
+      // Add loading message
+      setMessages(prev => [...prev, { role: "assistant", loading: true }])
+      
+      // Simulate AI response with delay
+      setTimeout(() => {
+        setMessages(prev => {
+          // Remove loading message and add response
+          const filtered = prev.filter(msg => !msg.loading)
+          return [...filtered, { 
+            role: "assistant", 
+            content: "This is a simulated AI response to your query about the document." 
+          }]
+        })
+        // Scroll to bottom after AI response
+        setTimeout(() => {
+          const chatContainer = document.querySelector('.ai-chat-messages');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }, 100)
       }, 1000)
     }
   }
@@ -271,7 +294,7 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
         <div className="w-2/3 h-full">
           <Card className="h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 shrink-0">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-lg font-medium">
                 {showPdfViewer ? "PDF Viewer" : "Item Analysis"}
               </CardTitle>
               <div className="flex items-center space-x-2">
@@ -347,29 +370,39 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
         <div className="w-1/3 h-full flex">
           <Card className="w-full flex flex-col">
             <CardHeader className="shrink-0 border-b">
-              <CardTitle>AI Chat</CardTitle>
+              <CardTitle className="text-lg font-medium flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                AI Chat
+              </CardTitle>
             </CardHeader>
             
             {/* Main content wrapper */}
             <div className="flex-1 flex flex-col min-h-0">
               {/* Scrollable messages area */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-4 ai-chat-messages">
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
                       key={index}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div
-                        className={`inline-block p-3 rounded-lg max-w-[90%] ${
-                          message.role === 'user' 
-                            ? 'bg-blue-100 text-blue-900' 
-                            : 'bg-gray-100 text-gray-900'
-                        }`}
-                        style={{ whiteSpace: 'pre-wrap' }}
-                      >
-                        {message.content}
-                      </div>
+                      {message.loading ? (
+                        <div className="flex items-center space-x-2 p-3">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm text-gray-500">AI is typing...</span>
+                        </div>
+                      ) : (
+                        <div
+                          className={`inline-block p-3 rounded-lg max-w-[90%] ${
+                            message.role === 'user' 
+                              ? 'bg-blue-100 text-blue-900' 
+                              : 'text-gray-900'
+                          }`}
+                          style={{ whiteSpace: 'pre-wrap' }}
+                        >
+                          {message.content}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

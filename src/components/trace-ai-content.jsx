@@ -24,7 +24,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-export function TraceAiApp() {
+export function TraceAiContent({ currentView, setCurrentView }) {
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState([
     { text: "Document received", completed: false },
@@ -35,7 +35,6 @@ export function TraceAiApp() {
   ]);
   const [documents, setDocuments] = useState([])
   const [selectedWorkflow, setSelectedWorkflow] = useState("Penunjukan langsung")
-  const [currentView, setCurrentView] = useState("main")
   const [selectedDocument, setSelectedDocument] = useState(null)
   const [messages, setMessages] = useState([
     {
@@ -612,47 +611,15 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   }
 
   return (
-    (<div className="flex h-screen overflow-hidden bg-gray-100">
-      <header
-        className="fixed top-0 left-0 right-0 bg-white shadow z-20 flex items-center justify-between">
-        <div className="py-4 px-4 sm:px-6 lg:px-8 flex items-center">
-          <Search className="h-8 w-8 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">trace.ai</h1>
-        </div>
-        <div className="py-4 px-4 sm:px-6 lg:px-8">
-          <UserCircle className="h-8 w-8 text-gray-500" />
-        </div>
-      </header>
-      {/* Left Sidebar - Admin Dashboard */}
-      <div className="fixed left-0 top-0 bottom-0 z-10 w-64 bg-white shadow-md">
-        <nav className="mt-20">
-          <a
-            href="#"
-            className="flex items-center px-4 py-2 text-gray-700 bg-gray-200">
-            <BarChart2 className="w-5 h-5 mr-2" />
-            Analysis
-          </a>
-          <a
-            href="#"
-            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200">
-            <Workflow className="w-5 h-5 mr-2" />
-            Workflow
-          </a>
-          <a
-            href="#"
-            className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-200">
-            <ListTodo className="w-5 h-5 mr-2" />
-            Tasks
-          </a>
-        </nav>
-      </div>
+    <div className="flex h-full">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col mt-16 ml-64">
+      <div className="flex-1 flex flex-col">
         {currentView === "main" ? renderMainView() : renderAnalysisView()}
       </div>
-      {/* Right Sidebar - Chat/Progress or Item Details */}
-      <div className="w-80 bg-white shadow-md flex flex-col mt-16">
-        <div className="p-4 border-b shrink-0">
+      
+      {/* Right Sidebar - Updated styling */}
+      <div className="w-80 bg-[#F8F9FA] border-l flex flex-col h-full">
+        <div className="p-4 border-b">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center">
             <ClipboardList className="w-5 h-5 mr-2 text-blue-500" />
             {currentView === "main" ? "Audit Progress" : "Item Details"}
@@ -662,6 +629,6 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
           {renderRightPanel()}
         </div>
       </div>
-    </div>)
-  );
+    </div>
+  )
 }

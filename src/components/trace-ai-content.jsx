@@ -17,12 +17,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { procurementItemsData } from "@/data/procurement-items";
 import { itemDescriptions } from "@/data/item-descriptions";
-import * as pdfjsLib from 'pdfjs-dist';
-// Set worker path directly
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+import { pdfjsLib } from '@/lib/pdf-config';
 
 export function TraceAiContent({ currentView, setCurrentView }) {
   const [isUploading, setIsUploading] = useState(false)

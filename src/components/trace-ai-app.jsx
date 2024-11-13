@@ -16,10 +16,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { itemDescriptions } from "@/data/item-descriptions";
-import * as pdfjsLib from 'pdfjs-dist';
+import { pdfjsLib } from '@/lib/pdf-config';
 import { processAnalysisData } from '@/utils/processAnalysisData';
-// Configure the worker to use local file
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)

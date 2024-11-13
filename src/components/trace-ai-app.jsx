@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label"
 import { itemDescriptions } from "@/data/item-descriptions";
 import { pdfjs } from 'react-pdf';
 import { processAnalysisData } from '@/utils/processAnalysisData';
-// Set worker path using CDN
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Use specific version that matches the worker
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)

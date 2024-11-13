@@ -85,15 +85,16 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
 
   const analyzeDocument = async (text) => {
     try {
-      const response = await fetch('/api/analyze', {
+      const response = await fetch('/api/proxy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text })
       });
 
       if (!response.ok) {
+        console.error('API Response:', response.status, await response.text());
         throw new Error(`API call failed: ${response.statusText}`);
       }
 

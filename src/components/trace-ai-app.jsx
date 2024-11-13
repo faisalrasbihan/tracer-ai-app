@@ -625,7 +625,10 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
         className="fixed top-0 left-0 right-0 bg-white shadow z-20 flex items-center justify-between">
         <div className="py-4 px-4 sm:px-6 lg:px-8 flex items-center">
           <Search className="h-8 w-8 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">trace.ai</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900">trace.ai</h1>
+            <span className="text-xs text-gray-400 ml-3">v0.3.2</span>
+          </div>
         </div>
         <div className="py-4 px-4 sm:px-6 lg:px-8">
           <UserCircle className="h-8 w-8 text-gray-500" />

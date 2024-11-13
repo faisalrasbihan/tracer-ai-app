@@ -89,6 +89,30 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
     }
   };
 
+  const analyzeDocument = async (text) => {
+    try {
+      const response = await fetch('/api/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text })
+      });
+
+      if (!response.ok) {
+        console.error('API Response:', response.status, await response.text());
+        throw new Error(`API call failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('API Analysis Result:', result);
+      return result;
+    } catch (error) {
+      console.error('Error analyzing document:', error);
+      return null;
+    }
+  };
+
   const handleUpload = async (event) => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';

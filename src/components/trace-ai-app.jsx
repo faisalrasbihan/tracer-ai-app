@@ -16,13 +16,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { itemDescriptions } from "@/data/item-descriptions";
-import * as pdfjsLib from 'pdfjs-dist';
+import { pdfjs } from 'react-pdf';
 import { processAnalysisData } from '@/utils/processAnalysisData';
-// Set worker path directly
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+// Set worker path using CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)
@@ -65,7 +62,7 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   const extractTextFromPdf = async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       let fullText = '';
       
       for (let i = 1; i <= pdf.numPages; i++) {

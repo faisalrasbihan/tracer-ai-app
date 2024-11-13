@@ -16,10 +16,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { itemDescriptions } from "@/data/item-descriptions";
-import { pdfjs } from 'react-pdf';
+import * as pdfjsLib from 'pdfjs-dist';
 import { processAnalysisData } from '@/utils/processAnalysisData';
-// Use specific version that matches the worker
-pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+// Configure the worker to use local file
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)
@@ -62,13 +62,20 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   const extractTextFromPdf = async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
       let fullText = '';
       
-      for (let i = 1; i <= pdf.numPages; i++) {
+      // Get total pages
+      const numPages = pdf.numPages;
+      
+      // Extract text from each page
+      for (let i = 1; i <= numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ');
+        const pageText = textContent.items
+          .map(item => item.str)
+          .join(' ');
         fullText += pageText + '\n';
       }
       

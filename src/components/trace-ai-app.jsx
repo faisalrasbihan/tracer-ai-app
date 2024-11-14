@@ -17,12 +17,8 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { procurementItemsData } from "@/data/procurement-items";
 import { itemDescriptions } from "@/data/item-descriptions";
-import * as pdfjsLib from 'pdfjs-dist';
-// Set worker path directly
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+import { pdfjsLib } from '@/lib/pdf-config';
+import { processAnalysisData } from '@/utils/processAnalysisData';
 
 export function TraceAiApp() {
   const [isUploading, setIsUploading] = useState(false)
@@ -71,13 +67,20 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
   const extractTextFromPdf = async (file) => {
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
       let fullText = '';
       
-      for (let i = 1; i <= pdf.numPages; i++) {
+      // Get total pages
+      const numPages = pdf.numPages;
+      
+      // Extract text from each page
+      for (let i = 1; i <= numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map(item => item.str).join(' ');
+        const pageText = textContent.items
+          .map(item => item.str)
+          .join(' ');
         fullText += pageText + '\n';
       }
       
@@ -679,7 +682,10 @@ Total harga penawaran yang 52% lebih tinggi dari total harga normal ini menunjuk
         className="fixed top-0 left-0 right-0 bg-white shadow z-20 flex items-center justify-between">
         <div className="py-4 px-4 sm:px-6 lg:px-8 flex items-center">
           <Search className="h-8 w-8 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">trace.ai</h1>
+          <div className="flex items-center">
+            <h1 className="text-2xl font-bold text-gray-900">trace.ai</h1>
+            <span className="text-xs text-gray-400 ml-3">v0.3.2</span>
+          </div>
         </div>
         <div className="py-4 px-4 sm:px-6 lg:px-8">
           <UserCircle className="h-8 w-8 text-gray-500" />

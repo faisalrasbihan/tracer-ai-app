@@ -4,11 +4,11 @@ const nextConfig = {
     config.resolve.alias.canvas = false;
     return config;
   },
-  output: 'standalone',
-  staticPageGenerationTimeout: 300,
-  experimental: {
-    optimizeCss: true,
-  }
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb', // Adjust this value based on your needs
+    },
+  },
 };
 
 export default nextConfig;

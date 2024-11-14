@@ -2,7 +2,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Send, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react"
-import { Document, Page, pdfjs } from 'react-pdf'
+import { Document, Page } from 'react-pdf'
 import { useState, useEffect } from 'react'
 import {
   Table,
@@ -18,9 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+import { pdfjsLib } from '@/lib/pdf-config';
 
 export function AnalysisView({ selectedDocument, messages, inputMessage, setInputMessage, handleSendMessage, onBack }) {
   const [numPages, setNumPages] = useState(null)

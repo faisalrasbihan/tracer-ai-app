@@ -11,9 +11,11 @@ const nextConfig = {
     };
     return config;
   },
-  async headers() {
-    return [];
-  },
+  // Add this to handle PDF.js worker
+  experimental: {
+    optimizeCss: true,
+    esmExternals: false
+  }
 };
 
 module.exports = nextConfig; 
